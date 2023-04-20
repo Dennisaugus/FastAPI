@@ -2,9 +2,13 @@ from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi import status
 
+from models import Funcionario
+from typing import List,Optional
+
+
 app = FastAPI()
 
-funcionario = {
+funcionarios = {
     1: {
         "nome": "Dennis Augusto Gusmão",
         "idade": 28,
@@ -54,21 +58,28 @@ funcionario = {
         "salario": 6000.0
     }
 }
+
 @app.get('/funcionarios')
-async def funcionarios_aquarela():
-    return funcionario
+async def get_funcionarios():
+    return funcionarios
 
 @app.get('/funcionarios/{funcionario_id}')
-async def get_funcionarios(funcionario_id: int):
+async def get_funcionario(funcionario_id: int):
     try:
-        funcionarios = funcionario[funcionario_id]
-        funcionarios.update({"id_funcionario": funcionario_id})
-        return funcionarios
-    
+        funcionario = funcionarios[funcionario_id]
+        funcionario.update({"id": funcionario_id})
+        return funcionario
     except KeyError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Funcionário não encontrado na base de dados')
-
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
+                            detail='Funcionario não existente')
     
+@app.post('/funcionarios', status_code=status.HTTP_201_CREATED)
+async def post_funcionario(funcionario: Funcionario):
+    next_id: int = len(funcionarios) + 1
+    funcionarios[next_id] = funcionario
+    del funcionario.id
+    return funcionario
+
 
 if __name__ == '__main__':
     import uvicorn
